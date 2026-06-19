@@ -1,0 +1,5 @@
+asset,n,mean_sq_resid,lb_lag10_stat,lb_lag10_pval,lb_significant,archlm_f_stat,archlm_f_pval,archlm_significant,garch_justified,verdict
+BTC,801,0.00064588,59.661,0.0,True,5.571,0.0,True,True,GARCH JUSTIFIED ✓
+ETH,801,0.00137871,23.7771,0.0082,True,2.1387,0.0197,True,True,GARCH JUSTIFIED ✓
+USDe,801,1.8e-07,84.4469,0.0,True,6.1446,0.0,True,True,GARCH JUSTIFIED ✓
+USDC,801,1e-08,18.3425,0.0495,True,1.8036,0.0563,False,True,GARCH JUSTIFIED ✓

@@ -1,0 +1,954 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Master Thesis Template by Fabian Schär %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Packages and Document Settings %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt,a4paper,titlepage,oneside,english]{article}
+%\usepackage[backend=biber]{biblatex}
+%%% Main Packages %%%
+\usepackage[english]{babel}
+%\usepackage[ngerman]{babel} % Use this option for German settings.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+
+%%% Additional Packages %%%
+%\usepackage{cite}
+\usepackage{framed}
+\usepackage{graphicx}
+\usepackage[backend=biber,style=apa]{biblatex}
+\addbibresource{references.bib}
+\usepackage{csquotes}
+%\usepackage[german]{fancyref}
+\usepackage[german,hidelinks]{hyperref} %hidelinks
+\usepackage{multirow}
+%\usepackage[round]{natbib}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{pst-all} % Not working with Sweave!!!
+\usepackage{float}
+\usepackage{adjustbox}
+
+
+%%% Math Packages %%%
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{theorem}
+\usepackage{epsfig}
+\usepackage{longtable}
+
+%%% Layout Specifications %%%
+\geometry{a4paper, top=35mm, left=40mm, right=40mm, bottom=45mm,
+headsep=10mm, footskip=12mm}
+
+%%% Parskip Settings %%%
+\setlength{\parskip}{3mm}
+\setlength{\parindent}{0mm}
+
+%%% Document Specifications %%%
+\title{Master Seminar Paper}
+\author{Juan Pablo Hoyo Vazquez}
+
+
+%%%%%%%%%%%%%%%%%%
+%%% Title Page %%%
+%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+%\begin{titlepage}
+\begin{center}
+\vspace{1em}
+\large{Seminar Paper}\\
+%\large{Bachelor Thesis}\\
+%\large{Master Thesis}\\
+\huge Title:\\ Volatility Spillovers, Causality and Sensitivity: An
+Empirical Analysis of Ethena USDe compared to
+Fiat-Backed Alternative Stablecoin USDC. \\
+\Large \vspace{1em}
+Juan Pablo Hoyo Vazquez
+
+\end{center}
+
+\vspace{1em}
+\normalsize
+\begin{flushleft}
+Supervised by:\\ 
+Prof. Dr. Fabian Schär \\
+Credit Suisse Asset Management (Schweiz) Professor for \\ 
+Distributed Ledger Technologies and Fintech \\
+Center for Innovative Finance, University of Basel
+\end{flushleft}
+\newpage
+\vspace{1em}
+\onehalfspacing
+\begin{center}
+\section*{Abstract}
+\end{center}
+This study examines the extent of volatility transmission from major crypto assets BTC and ETH into the peg stability of synthetic stablecoin USDe, benchmarked against fiat-backed stablecoin USDC, over a sample of 801 daily observations from February 2024 to May 2026. Three hypotheses are tested: whether crypto volatility significantly transmits into stablecoin peg instability (H1), whether this sensitivity differs measurably between USDe and USDC (H2), and whether transmission operates through the variance channel rather than mean return dynamics (H3). The methodology combines GJR-GARCH and DCC-GARCH volatility modeling, Granger causality testing on log and squared returns, Impulse Response Functions, the Diebold-Yilmaz spillover index, and CoVaR quantile regression, complemented by five robustness checks spanning alternative quantile thresholds, sub-sample stability, and nonparametric methods. The results show that BTC variance significantly transmits into USDe peg instability with no equivalent effect for USDC, that USDe absorbs approximately three times more tail risk than USDC under crypto market distress, and that this transmission operates specifically through the variance channel rather than through price-level co-movement. These findings, robust across all five complementary checks, provide an empirical basis for differentiating synthetic from reserve-backed stablecoins in risk classification and regulatory frameworks.\\
+\vfill
+\textbf{Keywords:} Volatility Spillover, Stablecoins, DeFi Risk Management, Crypto-Asset, Tail-Risk Transmission.\\
+\noindent\textbf{JEL:} C58, G23, G12, E42
+%\end{titlepage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Inhaltsverzeichnis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{gobble}
+
+\newpage
+\pagenumbering{Roman}
+\tableofcontents
+\vspace{1.5cm}
+\begin{center}
+%\includegraphics[width=4cm]{}
+\end{center}
+\singlespacing
+
+%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\onehalfspacing
+\pagenumbering{arabic}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ \section{Introduction}
+\textit{With the passage this year of the GENIUS Act (Guiding and Establishing National Innovation for U.S.
+Stablecoins Act), there is now a clear regulatory pathway in the U.S. for stablecoin issuers to broaden their reach and solidify stablecoins as a core part of the payment system. I believe economic research has some catching up to do.} \parencite{Miran_Stablecoin}\\
+\subsection{Background and Motivation}
+Stablecoins have emerged as a foundational infrastructure in decentralized finance, providing
+the liquidity and unit-of-account functions for lending protocols, decentralized
+exchanges, and yield-generating strategies. Their defining property — a stable value
+pegged to one US dollar — is maintained through fundamentally different mechanisms that
+carry different risk profiles. Fiat-backed stablecoins such as USD Coin (USDC)
+hold dollar-denominated reserves in custody, insulating the peg from
+crypto-market dynamics through a direct claim on real assets. Synthetic stablecoins such as USDe,
+by contrast, maintain their dollar value through financial engineering. Ethena's USDe holds
+crypto assets like Bitcoin, Ether or other stablecoins, among others, as collateral while simultaneously shorting corresponding perpetual futures positions to produce a delta-neutral exposure. The appeal of this design is yield
+generation. The protocol harvests positive perpetual futures funding rates offering holders returns that fiat-backed stablecoins structurally cannot provide.
+USDe grew from zero to approximately \$5 billion in market capitalization within months of
+its February 2024 launch, becoming the third-largest stablecoin in existence by 2025 \parencite{ethena_transparency}.\\
+
+The rapid scaling of synthetic stablecoins raises a fundamental question: does the delta-neutral hedging mechanism that generates USDe's yield and peg stability introduce a structural sensitivity to crypto
+market volatility that reserve-backed designs avoid? The hedging mechanism relies on liquid perpetual
+futures markets and positive funding rates. These are conditions that are most likely to be negatively affected
+precisely during episodes of crypto market stress, when a safe-asset property is most
+needed. When BTC or ETH volatility spikes, several risks can emerge: funding rates could turn negative, futures
+market liquidity gets thinner, and the hedge can slip, potentially allowing crypto variance to
+transmit into peg deviation. However, Ethena notes that "\textit{Negative funding rates are a feature, 
+rather than a bug of the system and USDe has been built with this in mind."} \parencite{ethena_docs}.
+When comparing both peg designs, USDC by construction, has no exposure to these dynamics.\\
+\\
+Empirical research of volatility spillovers from crypto assets into stablecoin markets
+remains limited. \parencite{Chen03032026} applied the CoVaR framework similarly to this paper but to USDT, establishing that tail risk from BTC can transmit into tether's peg stability during market stress. 
+To our knowledge, no published study has examined nor compared the volatility sensitivity of synthetic versus fiat-backed stablecoin designs within a unified empirical framework.
+
+\subsection{Research Objectives}
+This paper has three empirical objectives corresponding to its research question and hypotheses.\\
+\\
+The first objective is to test whether crypto asset (BTC, ETH) volatility significantly transmits
+into stablecoin (USDe, USDC) peg instability (\textbf{H1}). This addresses the main question regarding USDe stated above.\\
+The second objective is to determine whether USDe is measurably more sensitive to
+crypto tail risk than USDC (\textbf{H2}). This comparative test shows the
+distinction between synthetic and reserve-backed stablecoin design within a statistical framework, providing a quantified risk contrast analysis that policy discussions and market participants
+could profit from.\\
+The third objective is to identify the stress transmission channel (\textbf{H3}): does
+crypto risk propagate significantly into stablecoin peg instability through mean return dynamics or
+through the variance channel specifically? In other words, is risk propagation mainly through price movements of crypto assets or through volatility? Distinguishing these channels is essential
+for understanding the vulnerability mechanism that delta-hedging operates through. 
+This information is valuable for the design of risk management frameworks for portfolios including synthetic
+stablecoin exposures.\\
+
+\subsection{Research Question}
+To what extent does volatility of major crypto-assets like BTC and ETH transmits into synthetic stable-coin Ethena USDe which uses Delta-hedging and is this effect significantly different from fiat-backed stable-coin USDC?\\
+\textbf{H1 - Volatility Spillover:} BTC, ETH volatility has a statistically significant positive effect on stablecoin peg deviation.\\
+\textbf{H2 - Differential Sensitivity:} The sensitivity of USDe to crypto volatility is significantly different than that of USDC.\\
+\textbf{H3 - Channel Identification:} Crypto risk transmission into USDe operates through the volatility channel, not through return-level dependencies.\\
+
+\subsection{Contribution of the Study}
+ This paper makes three contributions to the literature on stablecoin risk and
+crypto-asset spillovers.\\
+First, it provides, to our best knowledge, the first empirical analysis of volatility transmission from major crypto assets into a delta-neutral synthetic stablecoin. The existing literature on stablecoin stability reviewed
+focuses on fiat-backed instruments (USDC, USDT) or crypto exchange architecture vulnerabilities. 
+USDe delta hedging design represents a structurally distinct category whose risk properties that deserve to be
+systematically and empirically examined.\\
+Second, it contributes to the comparative empirical stablecoin risk research by applying a
+convergent multi-method framework — combining parametric inference (CoVaR, Granger
+causality), distributional decomposition (DY spillover index), dynamic modeling (Dynamic Pearson Correlation, IRF),
+and nonparametric robustness checks (empirical upper tail dependence, Quantile Gradient Boosting)
+— to quantify the different risk sensitivity of synthetic versus reserve-backed designs.\\
+Third, the paper contributes to the emerging literature on DeFi systemic risk by
+identifying the variance channel as the volatility transmission mechanism. The finding
+that BTC squared returns Granger-cause USDe squared returns, with no equivalent
+mean-return predictability, establishes that crypto-stablecoin risk transmission is
+nonlinear and volatility-driven, with stress testing implications for DeFi
+protocols that treat synthetic stablecoins as equivalent to reserve-backed counterparts.
+The results carry direct relevance for regulatory frameworks that seek to
+differentiate stablecoin categories but lack empirical support for doing so.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Theoretical Background %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Theoretical Background}
+
+\subsection{Overview Crypto-Assets ETH and BTC}
+\textbf{Bitcoin} is a decentralized, peer‑to‑peer digital currency that operates without any central authority or intermediary. It functions through a consensus network that maintains a public, cryptographically secured ledger —the blockchain— which records and verifies all transactions. From a user perspective, Bitcoin acts as internet‑native cash, enabling direct value transfer between participants. Its supply is fixed and algorithmically governed, with new units issued through a competitive mining process at a decreasing and predictable rate until the total supply reaches 21 million coins \parencite{bitcoin_faq} \parencite{nakamoto2008bitcoin}.\\
+\textbf{Ether (ETH)} is the native cryptocurrency that powers the Ethereum network. It's used to pay transaction fees (known as 'gas') for using the network and the applications built on top of it, to secure the network through staking, and serves as digital money for payments and investments—without being controlled by any central entity, organization, or government. ETH is one of the largest cryptocurrencies by market capitalization. \parencite{ethereum_org}\\
+
+\subsection{Stablecoins in Crypto and non-crypto Markets}
+As stated by \parencite{Miran_Stablecoin}, putatively, stablecoins were originally intended to facilitate holding and trading cryptocurrency. But their proliferation has been aided by providing users with a stable store of value, a means of payment, and the ability to move capital quickly, irrespective of territorial borders.\parencite{Miran_Stablecoin}\\
+According to \parencite{ethena_docs}, stablecoins are the single most important instrument in crypto. All major trading pairs across spot and futures markets in centralized and decentralized venues are denominated in stablecoin pairs with 90\% of order-book trades and >70\% of on-chain settlements being stablecoin denominated. Stablecoins settled \$8.5 trillion onchain in just the second quarter of 2024, constitute some of the largest assets in the space and are by far the most utilized assets across decentralized exchanges and money markets\parencite{ethena_docs}.\\
+Stablecoins are not only the foundation of the entire industry, but are also arguably the only crypto asset to have (i) found true product-market fit globally with more than 100 million users, (ii) the largest addressable market, and (iii) the greatest potential for revenue generation \parencite{ethena_docs}.\\
+The innovation of public blockchains means that stablecoins can trade freely on rails
+that anyone in the world can use and once stablecoins are in circulation in an economy, they can circulate more freely and cheaply behind capital controls than traditional forms of dollar payments \parencite{Miran_Stablecoin}.
+
+\subsection{Fiat-Backed Stablecoin USDC} %definition, overview of USDC 
+Stablecoins that solely depend on traditional financial infrastructure, such as USDC or USDT, provide stability and capital efficiency, but they introduce unhedgeable custodial risk with all of the backing in bond collateral in regulated bank accounts which are prone to censorship, critical reliance upon the existing banking infrastructure and country-specific evolving regulations.\parencite{ethena_docs}.\\
+Circle Documentation \parencite{circle_docs} describes USDC as a digital dollar (also known as stablecoin) issued by Circle, running on many of the world’s leading blockchains. Designed to represent US dollars on the internet, USDC is backed 100\% by highly liquid cash and cash-equivalent assets so that it’s always redeemable 1:1 for USD .\\
+Before USDC, businesses needed traditional banking solutions to accept payments, send remittances to vendors and suppliers, and manage their corporate treasuries. In contrast to USDC, legacy payment methods are slow, expensive, and limited by their lack of interoperability with other systems \parencite{circle_docs}.\\ 
+
+\subsection{Synthetic Stablecoins and Delta-Hedging Ethena USDe}
+Described in Ethena's documentation, USDe is a synthetic dollar protocol built on Ethereum that provides a crypto-native solution for money. USDe provides a fully-backed crypto-native scalable solution for money achieved by delta-hedging Bitcoin, Ethereum and other governance-approved spot assets using perpetual and deliverable futures contracts, as well as by holding liquid stablecoins such as USDC and USDT \parencite{ethena_docs}. \\
+USDe peg stability is supported through the use of delta hedging derivatives positions against protocol-held backing assets, maintaining a relatively stable value with reference to the spot value of crypto assets as well as futures positions. The inclusion of liquid stablecoins (such as USDC and USDT) enhances the efficiency of the delta hedging process, while also potentially acting as a safeguard in bear markets when funding rates and futures basis are suboptimal \parencite{ethena_docs}. As of June 2026, USDe's system backing is composed of 45\% DeFi Lending assets, 41\% liquid stables (stablecoins), 11\% Real World Assets and close to 2\% in crypto assets like BTC and ETH. In contrast to the first year of USDe where crypto assets represented over 80\% of the backing assets, a big shift in the backing structure has taken place which can inspire further granularity in empirical research.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Literature Review %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Literature Review}
+
+The study by \parencite{Chen03032026} shares fundamental similarities in the methodology and model selection with this analysis and presents a robust empirical analysis, therefore it is most frequently referenced in the literature review.
+According to \parencite{jrfm14100493} conditional correlations are time-varying and both ARCH and GARCH effects play an important role in determining conditional volatility among cryptocurrencies. They found spillovers from BTC and ETH to USDT, but no influence running in the other direction, suggesting that USDT does not play an important role in volatility transmission across cryptocurrency markets.
+\parencite{Chen03032026} tested whether the CoVaR between USDT and BTC/ETH is significantly higher under extreme versus normal market conditions. Their results confirm significant downside-to-upside risk spillover effects from BTC/ETH to USDT, establishing interdependence between the left tail of BTC/ETH and the right tail of USDT. This indicates that during extreme negative market conditions in BTC or ETH, there is a substantial increase in USDT’s exposure to positive peg-price premium, which challenges its expected stability as a stablecoin. In other words, their results indicate that when BTC/ETH are in a bearish stage (left tail = negative returns), USDT tends to move towards a bullish stage (right tail = positive return or premium over peg).
+The outcome from above in the regression results by \parencite{Chen03032026} reveal that "the occurrence of extreme negative returns in BTC or ETH significantly shift the correlation with USDT returns from positive to negative when compared to normal market conditions, indicating that USDT exhibits strong hedging properties and thus is not stable."
+As cited by \parencite{Chen03032026}, Liao and Caramichael \parencite{liao2022stablecoins} suggest that in the cryptocurrency market, when non-stablecoin prices drop sharply, holders are likely to shift to stablecoins like USDT due to their stability and as a result, USDT could exhibit a positive premium during significant downturns in BTC and ETH prices. 
+Additionally, \parencite{Chen03032026} show that the  skewness of BTC and ETH suggests a distribution skewed towards smaller returns, with a higher risk of larger losses, whereas the positive skewness of USDT indicates a tendency for positive returns. The excess kurtosis reveals that both BTC, ETH and USDT exhibit heavy-tailed characteristics, meaning that extreme returns, both positive and negative, are more likely than what a normal distribution would predict. Findings by \parencite{Bouri26112018} indicate that spillovers between Bitcoin and other assets classes studied are subject to time and market conditions and the volatility in Bitcoin can be predicted based on that of the other assets, which is not the case in the converse situation.
+\parencite{Chen03032026} performed a bivariate Realized GARCH estimation of CoVaR and statistically confirm its effectiveness, suggesting that the incorporation of intraday information improves the accuracy of CoVaR estimates and their results indicate that the Realized GARCH model with skewed-t errors generate more accurate CoVaR estimates thanks to the informative nature of high-frequency data in capturing tail dependence, which is also supported by Bianchi, De Luca, and Rivieccio \parencite{BIANCHI2023391}. In their conclusion, \parencite{Chen03032026} highlight the necessity of incorporating such data when assessing stablecoins peg instability. According to their empirical results, the $\beta1$ coefficient (relationship between BTC/ETH returns and USDT returns during normal market conditions) across all models is significantly positive, indicating a positive correlation between the returns of BTC/ETH and USDT during normal market conditions, suggesting that in normal market conditions, USDT demand is largely transactional rather than speculative, and suggesting a tendency  under normal market conditions to follow overall crypto market movements. 
+Based on their test results, the bivariate normal distribution is insufficient to capture the tail dependence between BTC/ETH and USDT. This finding is also supported in the results by \parencite{GIRARDI20133169} which show that CoVaR estimates based on the Gaussian distribution are rejected whereas the estimates based on skewed-t distributions cannot be rejected, highlighting the importance of taking skewness and excess kurtosis into account in financial modeling. \\
+Research by \parencite{LET2023122318} indicates that negative returns and volatility changes in the traditional cryptocurrency market (mainly BTC and ETH) are driving the popularity of stablecoins indicating that information in the cryptocurrency market is processed relatively quickly and it exhibits similar properties to those observed in developed financial markets. This can indicate a reason behind the structural shift of USDe backing assets mentioned earlier.
+Also, \parencite{GIRARDI20133169} define the systemic risk contribution of an institution – $\Delta$CoVaR – as the change from its CoVaR in its benchmark state to its CoVaR under financial distress and they define the benchmark state as a one-standard deviation event.\\
+ As confirmed by \parencite{BIANCHI2023391} for measuring CoVaR, it is important to capture the time-varying dynamics of the volatility and correctly assessing the heaviness of the tails and of the dependence structure is needed in the evaluation of this systemic risk measure, supporting the DCC-GARCH model selection for our analysis.
+ The back-testing results of \parencite{CHEN2023103753} suggest that the multivariate Realized GARCH model with multivariate skew-t errors provides robust CoVaR estimates, however they use high-frequency intraday data, which is not the case in this analysis. A paper by \parencite{FAKHFEKH2020101075} analyzing the selection of the most optimum model or set of models useful for modeling popular crypto-currencies associated volatility, reached results proving that the majority of crypto-currencies are rather effectively modeled via the TGARCH with double exponential distribution, also known as the GJR model, because Glosten et al. (1993) proposed essentially the same model, as cited in \parencite{FAKHFEKH2020101075}.
+A study conducted by \parencite{BORRI20191} which studies vulnerability of cryptocurrencies to tail-risk in different asset classes, found that cryptocurrencies are highly exposed to tail-risk within crypto-markets, but are not exposed to tail-risk in other global assets and that crypto-specific and macro variables can predict future conditional tail-risk. Specifically, high (in absolute value) currency specific value-at-risk, high volatility and volume, and low returns forecast large future negative CoVaR and $\Delta$CoVaR values.
+
+\section{Data and Variable Construction}
+
+\subsection{Sample Selection}
+For this research paper I sourced 801 observations of daily close prices denominated in USD  from Yahoo Finance of four assets (BTC, ETH, USDe, USDC) covering a sample time-frame from 2024-02-21 $\rightarrow$ 2026-05-01, from which, the returns were computed as the main variable and volatility proxy for the methodology in this research. 
+\subsection{Descriptive Statistics}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ccccc}
+    \toprule
+        Asset & Mean & Std Dev & Skew & Kurt\\
+    \midrule
+         BTC& 0.0005 & 0.0257 & 0.1294 & 6.5100\\
+         ETH& -0.00003 & 0.0372 & 0.2443 & 6.4083\\
+         USDe&  -0.0000& 0.0004 & -0.3201 & 6.8087\\
+         USDC& -0.0000 & 0.0001 & -0.0349 & 4.1872\\
+    \bottomrule
+    \end{tabular}
+    \caption{Summary Statistics}
+    \label{tab:descr}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Methodology %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Methodology}
+
+\subsection{Pre-Estimation Conditions Diagnostics}
+\subsubsection{Normality and Stationarity Testing}
+Before specifying a distribution assumptions of the return series for the volatility models, the analysis evaluates whether the series follow a Gaussian normal distribution using the Jarque–Bera (JB) normality test \parencite{JARQUE1980255}. The Jarque-Bera test is a goodness-of-fit test of departure from normality, based on the sample skewness and kurtosis \parencite{Jarque2011}: under the null hypothesis of a normal distribution, returns should be symmetric around their mean and display kurtosis of three. However, financial returns often display heavy tails and asymmetry due to frequent shocks, which are features that break a normality Gaussian assumption and lead to biases if ignored. Applying the JB test to all four series in the sample yields strong rejections of normality, confirming the presence of excess kurtosis and tail heaviness. This evidence as well as evidence from the literature review, motivates the use of a Student‑t innovation distribution in the GARCH models, since it fits fat‑tailed caused by shocks and provides a more realistic representation of the underlying return series dynamics.\\
+\\
+Another important requirement for the empirical models used in this study is that the underlying time series are \textbf{stationary}. Stationarity implies that the statistical properties of a series remain constant over time: the mean does not drift or trend, the variance does not systematically expand or contract \parencite{Ruey2013}.
+Non‑stationary data can produce misleading statistical relationships, a problem recognized in the econometrics literature. If a series exhibits persistent trends, stochastic drift, or evolving variance, then conventional t‑statistics and p‑values no longer follow their assumed statistical properties as explain in \parencite{Ruey2013}.\\
+The simplest form of non-stationarity is a unit root, where the series contains a lagged term with a coefficient of exactly one:
+
+$$y_t = \rho y_{t-1} + \varepsilon_t$$
+
+If p = 1, the series is a random walk and is non-stationary. Shocks accumulate permanently.\\
+If p < 1, shocks decay and the series is stationary. \parencite{Ruey2013}\\
+To assess stationarity, this paper employs three complementary tests. The Augmented Dickey–Fuller (ADF) test evaluates whether the data contain a unit root by estimating a regression on the lagged values of the series \parencite{Ruey2013}. As a robustness check, the analysis also includes the Phillips–Perron (PP) test which is a non-parametric alternative. Although methodologically different, the ADF and PP tests yield consistent conclusions since they test the same direction of the null hypothesis. Both ADF and PP share an important limitation: their null hypothesis is non‑stationarity. A failure to reject may reflect genuine non‑stationarity, or it may simply indicate insufficient statistical power.
+To address this ambiguity, the study incorporates the KPSS test, which reverses the null hypothesis. H0: the series is stationary.\\
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ccc}
+    \toprule
+        ADF, PP  & KPSS & Conclusion\\
+    \midrule
+        Reject H0 (p<0.05) & Fail to reject H0 (p>0.05) & Stationary\\
+        Fail to reject & Reject & Non-Stationary\\
+    \bottomrule
+    \end{tabular}
+    \caption{Stationarity}
+    \label{tab:placeholder}
+\end{table}
+
+\subsubsection{ARCH Effects}
+An essential preliminary step in modeling financial return series is to determine whether they exhibit serial dependence in the mean or time‑varying volatility in the variance, in other words, if they are values show an autocorrelation in their own lagged values \parencite{Ruey2013}. To assess serial autocorrelation in returns, this study employs the \textbf{Ljung–Box Q test}, which evaluates whether the first m lags of the series differ significantly from zero. Formally, the test statistic is:
+
+$$Q(m) = n(n+2) \sum_{k=1}^{m} \frac{\hat{\rho}_k^2}{n-k}$$
+
+where $\hat{\rho}_k$ is the sample autocorrelation at lag k and n is the sample size.
+\textbf{H0}: The first m lags are all zero — no serial dependence.\\
+\textbf{H1}: At least one is non-zero. \parencite{Ruey2013}\\
+
+\textbf{volatility clustering} refers to the empirical recognition that large price movements tend to be followed by large movements, and small movements by small movements, first documented \parencite{doi:10.1086/258792}. This goes against the assumption of constant variance and motivates models in the ARCH/GARCH family, which explicitly allow volatility to evolve over time as a function of past shocks, which its name "Generalized Auto Regressive Conditional Heteroskedasticity, expresses, meaning that the variance is dependent on past variance and thus becomes a function of its own past variance (being the opposite of homoskedasticity constant variance). Before estimating such models, it is necessary to verify that the data does exhibit conditional heteroskedasticity. As shown in \parencite{Ruey2013}, the analysis employs the ARCH‑Lagrange Multiplier test of \parencite{ENGLE198283} provides a formal diagnostic by regressing the squared residuals on their own lags:
+$$\varepsilon_t^2 = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2 + \alpha_2 \varepsilon_{t-2}^2 + \ldots + \alpha_q \varepsilon_{t-q}^2 + u_t$$
+
+where $\alpha$ is the lag coefficient, $\varepsilon$ is the demeaned residual ($\varepsilon = r - \mu$)  and $\varepsilon_t^2$ is used to check for conditional heteroskedasticity, $\upsilon$ denotes the error term, and $t = q + 1,...,T$ where T is the sample size \parencite{Ruey2013}. The null hypothesis states that all $\alpha$ coefficients are zero, implying no ARCH effects and a constant conditional variance \parencite{Ruey2013}. Rejection of the null indicates that past squared shocks help explain current volatility, confirming the presence of time‑varying variance and justifying the use of GARCH models.\\
+\textbf{H0:} All $\alpha$ coefficients are zero, no ARCH effects, constant variance.
+\textbf{H1:} At least one is non-zero, ARCH effects present, variance is time-varying. \parencite{Ruey2013}\\
+Together, the Ljung-Box and the ARCH-LM tests provide a justification for GARCH modeling. 
+
+\subsubsection{Asymmetric Volatility GARCH Model Selection}
+Another characteristic of financial return series is that negative shocks raise conditional variance more than equally-sized positive shocks which is a phenomenon documented in equity markets and confirmed for crypto assets as well \parencite{Bouri2017return}. Standard GARCH(1,1) cannot capture this asymmetry because squared shocks enter the variance equation symmetrically \parencite{Ruey2013}. This paper therefore applies the GJR-GARCH(1,1) as explained in \parencite{Ruey2013} which, as mentioned before is also known as the Threshold TGARCH model, specified as
+\begin{equation}
+h\_t = \omega + \alpha \varepsilon_{t-1}^2 + \gamma \varepsilon_{t-1}^2 , \mathbf{1}[\varepsilon_{t-1} < 0] + \beta h\_{t-1}
+\end{equation}
+
+where $\omega > 0$ is the baseline variance floor, $\alpha$ measures the sensitivity of conditional variance to new shocks, $\gamma$ is the asymmetry parameter capturing the additional impact of negative shocks when $\gamma > 0$ \parencite{Ruey2013}. The effective shock sensitivity on down days is $\alpha$ + $\gamma$ and $\beta$ represents the persistence of the variance process (shock). The total persistence is $\alpha$ + $\beta$ + $\gamma$/2, where the factor of one-half reflects the expected contribution over a symmetric distribution accounting for positive and negative movements \parencite{doi:https://doi.org/10.1002/9780470644560.ch3}. The half-life of a volatility shock is derived as $\ln(0.5)/\ln(\beta)$ and tells us after how many days a shock decreases to half its original size \parencite{Engle01022001}. Innovations ("return left over fraction") are assumed to follow a Student-t distribution with degrees of freedom $\nu$ justified by the evidence of excess kurtosis across all four return series confirmed by the Jarque-Bera test. Lower $\nu$ implies fatter tails relative to the normal distribution \parencite{bollerslev1987garch}. The necessity of the asymmetric specification is formally established via the Engle-NG \parencite{Engle01011993} sign bias test on symmetric GARCH(1,1) standardized residuals, which evaluates the leverage effect. In other words, whether negative versus positive shocks and their magnitudes differentially predict squared residuals with three sub-tests — sign bias, negative size bias, and positive size bias — and a joint F-test (see appendix) whose rejection confirms that T/GJR-GARCH is statistically preferable to its symmetric counterpart. GJR-GARCH(1,1) is applied uniformly across all four assets to ensure comparability of standardized residuals fed into the DCC Stage 2 estimation, as is required for consistency in multivariate conditional correlation models.
+
+\subsubsection{GJR to DCC GARCH to Dynamic Pearson Correlation}
+Univariate GJR-GARCH computes each asset's conditional variance independently but provides no information about how assets co-move over time. The Dynamic Conditional Correlation model of \parencite{Engle01072002} extends the analysis to the full 4$\times$4 conditional covariance matrix, $H_t$ through a two-stage procedure, meaning it computes the system-wise joint conditional variance of the four assets \parencite{HUAI2026102526}. In Stage 1, a separate GJR-GARCH(1,1) is estimated per asset, producing standardized residuals $$z_{i,t} = \frac{\varepsilon_{i,t}}{\sqrt{h_{i,t}}}$$ \\
+Stage 2 models the time-varying joint correlation matrix via:
+
+\begin{equation}
+Q_t = (1 - a - b)\bar{Q} + a , z_{t-1} z_{t-1}^{\prime} + b , Q_{t-1},\\ 
+\quad R_t = \mathrm{diag}(Q_t)^{-1/2} , Q_t , \mathrm{diag}(Q_t)^{-1/2}
+\end{equation}
+
+where $\bar{Q}$ is the unconditional covariance matrix of standardized residuals of the asset system, $\alpha$ tells the speed of correlation adjustment to new information/shocks, $\beta$ represents the correlation persistence, and the system stationarity requires $\alpha + \beta < 1$ \parencite{HUAI2026102526}. R\_t is the standardized correlation matrix recovered by rescaling Q\_t so that all diagonal elements equal one since a correlation matrix must have 1 on the diagonal and the correlations (between -1 and 1) off-diagonal \parencite{Engle01072002}. The DCC framework is relevant to this study because it would capture the co-movement between crypto assets and stablecoins and allow it to vary over time, ideally capturing periods of elevated stress transmission that a static correlation measure would miss.
+However, the DCC model encounters an identified failure which is known in mixed-volatility systems where one series exhibits near-constant variance \parencite{Engle01072002} as USDC does in this case with a near zero variance. The correlation updating equation in Stage 2 is given by the cross-product $z_{i,t} \cdot z_{j,t}$. For stablecoin series with near-zero daily returns, the GARCH standardized residuals yield near-constant (zero), making the cross-product $z_{BTC,t} \cdot z_{USDe,t} \approx 0$ at every step regardless of market conditions. That means that DCC-GARCH optimizer cannot identify time variation in the correlation, converging instead to the unconditional covariance $\bar{Q}$ and producing flat, degenerate correlation estimates for all crypto-stablecoin pairs. 
+This outcome can be visually confirmed with Figure~\ref{fig:condvol} in the Empirical Results section showing USDC conditional volatility flat line which would yield a flat correlation series. This represents a structural property of the data rather than a model miss-specification. \\
+
+As a model-free alternative, this paper employs \textbf{90-day rolling Pearson correlations} for crypto-stablecoin pairs, computed as a standard rolling window correlation over the sample. This approach requires no distributional assumptions, remains valid regardless of the variance structure of either series, and continues to detect genuine time variation in co-movement even when that variation does not match volatility clusters, thus fit for when one series has near-constant variance.
+
+\subsection{Granger Causality and Transmission Channel}
+To examine volatility transmission across BTC, ETH, USDe, and USDC, the analysis conducts pairwise Granger‑causality tests using squared returns $r^2$ as a proxy for time‑varying volatility. Y is said to “Granger cause” X if information about the history of Y improves one's ability to predict the behavior of X, above what can be achieved when only information about the history of X is used for this purpose. Thus, if Y does not Granger cause X, Y is strictly exogenous to X \parencite{CLARKE2005829}\parencite{granger1969causality}. The F‑tests assess whether lagged values of asset X improve the prediction of asset Y beyond the information contained in lagged Y alone. The output is filtered to the four directional pairs where BTC or ETH may influence USDe or USDC (BTC/ETH $\rightarrow$ USDe/USDC) to isolate the volatility‑spillover channel most relevant for stablecoin risk. This framework allows the determination of whether crypto‑asset volatility contains predictive information for stablecoin volatility, as captured by squared‑return dynamics, and identifies pairs with significant transmission channel.
+Formally, X Granger-causes Y if:
+
+$$\text{MSE}[\hat{Y}_{t+1} | Y_{t}, Y_{t-1}, \ldots, X_t, X_{t-1}, \ldots] < \text{MSE}[\hat{Y}_{t+1} | Y_{t}, Y_{t-1}, \ldots]$$
+
+The test in framework is a standard F-test (Wald test) on the restriction that the coefficients on all lags of X in the Y equation are jointly zero:\\
+\textbf{H0:} The block of coefficients relating all lags of X to Y is zero — X does not Granger-cause Y.
+\textbf{H1:} At least one such coefficient is non-zero — X contains predictive information about Y.\\
+The F-statistic test is computed as:
+
+$$F = \frac{(RSS_R - RSS_U)/q}{RSS_U/(n-k)}$$
+
+where RSS\_R is residual sum of squares of the restricted model (without X's lags), RSS\_U is from the unrestricted model (with X's lags), q is the number of restrictions (number of lags of X excluded), and k is the total parameters in the unrestricted model \parencite{MultipleTSA}.
+The Bonferroni correction for $\alpha = 0.05$ across 12 tests requires each individual test to use threshold $p<0.05/12 \approx 0.004$ \parencite{Dunn01031961}.
+
+\subsection{Impulse Response Functions}
+While Granger causality identifies whether a predictive relationship exists, it provides no information about the magnitude, direction, or duration of a dynamic shock response. Impulse Response Functions extend the VAR framework by tracing the response of variable Y over \textit{h} periods following a one-standard-deviation structural shock to variable X, holding all other shocks to zero \parencite{CHOI201971}. Because new shocks are contemporaneously correlated, structural shocks must be identified before computing IRFs, meaning that a shock temporal structure or order must be determined for the IRF computation for which the analysis follow a Cholesky decomposition, which provides a causal ordering of relationships following \parencite{sims1980macroeconomics}. The order adopted (BTC $\rightarrow$ ETH $\rightarrow$ USDe $\rightarrow$ USDC) assumes that within a trading day, crypto asset shocks can affect stablecoin values but not vice versa, an assumption supported empirically by the null Granger causality test result from crypto asset to stablecoins that will be shown in the empirical result section. IRFs are estimated on the squared returns over a horizon of H = 10 days. Confidence intervals are constructed via the percentile bootstrap method with 500 replications, resampling VAR residuals/innovations with replacement in each iteration. An impulse response is considered statistically significant at a given horizon if the 90\% confidence interval excludes zero. \parencite{10.1162/003465398557465}
+
+\subsection{Diebold-Yilmaz Spillover Index}
+The Diebold-Yilmaz spillover index provides a system-level decomposition of forecast error variance, quantifying the directional magnitude of volatility transmission across assets without a specific causal structure. The framework is based on the Generalized Forecast Error Variance Decomposition from a VAR estimated on squared returns $r^2_t$ at horizon H = 10, consistent with Granger and IRF. For each variable \textit{i}, the proportion of its \textit{H}-step-ahead forecast error variance attributable to shocks originating in variable \textit{j} is computed, yielding a $K\times K$ spillover table. From this table, the \textit{FROM} measure captures the total variance received by asset \textit{i} from all other assets; the \textit{TO} captures the total variance contributed by asset \textit{i} to the system; and the \textit{NET} measure,  defined as TO minus FROM, classifies each asset as a net transmitter (positive) or net receiver (negative) of volatility \parencite{DIEBOLD201257}. The Total Spillover Index summarizes the system-wide level of cross-asset transmission interdependence as a percentage of total forecast error variance explained by cross-asset shocks \parencite{DIEBOLD201257}. It is important to note that the DY framework produces no p-value or confidence interval and is not a formal hypothesis test. It provides descriptive quantification of directional variance transmission that complements the results from Granger causality and CoVaR.
+
+\subsection{CoVaR and $\Delta$CoVaR}
+To quantify tail‑risk transmission from crypto assets to stablecoins, the analysis employs the CoVaR framework of \parencite{DOI:10.1257/aer.20120555} and \parencite{Chen03032026}. For each crypto stablecoin pair, CoVaR is defined as the \textit{q}-th conditional quantile of the stablecoin return given that the corresponding crypto return is simultaneously at its own \textit{q}-th quantile \parencite{Chen03032026}. Two quantile regressions are estimated for each pair —one at the distress quantile \textit{q}=0.05 and one at the median \textit{q}=0.50 —yielding the conditional quantile functions at distress and median quantile. Then, their difference $\Delta$CoVaR captures the absolute incremental deterioration in the stablecoin's left tail when the crypto asset moves from a normal to a distress state. The slope coefficient $\beta$ at the distress quantile (\textit{q}=0.05) serves as the primary indicator of directional tail-risk transmission: a statistically significant 0.05-$\beta$ implies that extreme negative movements in the crypto asset shift the conditional left tail of the stablecoin \parencite{Chen03032026}. To assess the the magnitude of the transmission effect, the mean $\Delta$CoVaR is accompanied by a percentile‑bootstrap confidence interval based on 1,000 replications. The $\Delta$CoVaR confidence interval measures the stability and magnitude of that transmission but is not by itself a causal test. Finally, to evaluate whether USDe exhibits systematically greater vulnerability than USDC, the absolute $\Delta$CoVaR distributions for each stablecoin are compared using a two‑sample \textit{t}-test for both BTC‑ and ETH‑driven shocks.\\
+\\
+*The python code for the methodology pipeline was developed with the assistance of large language models, specifically \parencite{claude_sonnet_2025}. The model selection and evaluation lie within the authors criterion.
+
+\section{Empirical Results} 
+
+\subsection{Pre-Estimation Conditions Diagnostics Results}
+All four log return series satisfy the stationarity requirements for VAR and GARCH
+estimation. The Augmented Dickey-Fuller and Phillips-Perron tests reject the unit root
+null at $p < 0.001$ for all assets. Consistent with these results, the KPSS test
+fails to reject the stationarity null for all series, with reported $p$-values at
+$p \geq 0.10$, confirming stationarity from both testing directions.
+The Jarque-Bera test rejects normality for all four
+series, reflecting the excess kurtosis documented in the descriptive statistics in Table 1, 
+which formally justifies the use of Student-$t$ innovations in the GARCH specification.\\
+
+Evidence of serial autoregressive conditional heteroskedasticity and autocorrelation is found for three of the four assets.
+The Engle ARCH-LM test and the Ljung-Box $Q$-test on squared residuals both reject
+the null of no ARCH effects at significance levels for BTC
+(ARCH and Ljung-Box at $p < 0.001$), ETH (ARCH-LM $p = 0.020$; Ljung-Box $p = 0.008$), and USDe
+(ARCH and Ljung-Box at $p < 0.001$). For USDC, the ARCH-LM test yields $p = 0.056$ and Ljung-Box $p = 0.0495$, falling at the borderline or the 5\% threshold. This borderline result reflects USDC's
+near-constant return variance and has important implications: it confirms that
+USDC's peg is structurally insulated from time-varying risk dynamics, and it
+explains why GARCH-based conditional variances for USDC are near-constant,
+being unsuitable for subsequent Granger causality
+and Diebold-Yilmaz analyses, thus squared log returns $r_t^2$ are used
+as the volatility proxy throughout the  pipeline for all four
+assets. Together, the diagnostic results establish valid pre-conditions for all
+subsequent stages.\\
+In simple terms: the tests confirm that all four series are well-behaved for
+the statistical methods that follow, and that BTC, ETH and USDe experience meaningful
+volatility clustering that GARCH can model, while USDC's features barely varying variance, indicating that the two stablecoin designs have fundamentally different variance profiles.
+
+\subsection{GJR-GARCH(1,1) Estimation}
+\textbf{Model selection:} Comparison of GARCH(1,1)-t, GJR-GARCH(1,1)-t, and
+EGARCH(1,1)-t via AIC and BIC selects GJR-GARCH for BTC (AIC: 3650 vs 3659; BIC: 3678 vs 3683) and for ETH (AIC: 4249 vs 4256; BIC: 4277 vs 4279) (see appendix).
+For USDe and USDC, EGARCH achieves lower information criteria; however, the
+GJR-GARCH solution for USDC is degenerate (AIC: $+$70,298), confirming that the
+asymmetry parameters are unidentifiable in a series with near-constant variance.
+GJR-GARCH(1,1)-t is then applied uniformly across all assets to ensure
+consistency of the standardized residuals fed into DCC Stage 2, following the
+requirement for uniform specifications in DCC estimation \parencite{Engle01072002}.
+This decision of GJR-GARCH is formally justified by the Engle-NG sign bias test (see appendix), whose joint
+$F$-test rejects the null of symmetric volatility responses for all four assets:
+BTC ($F = 6.663$, $p < 0.001$), ETH ($F = 9.056$, $p < 0.001$), USDe
+($F = 2.834$, $p = 0.037$), and USDC ($F = 12.971$, $p < 0.001$). The
+significant joint $F$-test confirms that negative and positive shocks have
+asymmetric effects on conditional variance across the full system, providing direct
+statistical justification for the GJR specification.\\
+
+\textbf{Parameter estimates:} GJR-GARCH(1,1)-t parameter estimates are reported in
+Table 3. For BTC and ETH, both estimated using an extended sample from January 2020
+to ensure robust identification of persistence across multiple volatility regimes. BTC exhibits
+near-integrated GARCH dynamics with persistence $\alpha + \beta + \gamma/2 = 0.990$
+and a half-life of 8.62 days. ETH shows slightly lower but still
+high persistence at 0.986, with a half-life of 5.16 days. The fat-tailed Student-$t$
+distribution is confirmed by the low degrees-of-freedom estimates: $\hat{\nu} = 3.1$
+for BTC and $\hat{\nu} = 3.4$ for ETH, implying extreme tail thickness. For USDe,
+the shock-sensitivity parameters $\alpha$ and $\gamma$ converge to boundary values and are therefore not reported; the persistence estimate of 0.980
+(half-life: 6.94 days) and $\hat{\nu} = 5.98$ are retained as informational
+indicators of USDe. For USDC, only the near-zero $\hat{\beta} \approx 0.001$ and
+$\hat{\nu} = 14.16$ are meaningful. The half-life of under one
+trading day confirms that any deviation in USDC's variance vanishes almost
+instantaneously. The $\hat{\nu}$ approaching that of a normal distribution, reflects USDC's
+minimal tail risk. 
+The visual evidence in Figure~\ref{fig:condvol} corroborates these estimates:
+BTC, ETH and USDe display pronounced volatility clusters, and USDC's conditional volatility is effectively flat throughout the
+sample.\\
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ccccccc}
+    \toprule
+        Asset & $\alpha$ & $\gamma$ & $\beta$ & $\nu$ & $\alpha+\beta+\gamma/2$ & Half-life\\
+    \midrule
+        BTC & 0.071 & 0.01 & 0.92 & 3.1 & 0.99 & 8.62\\
+        ETH & 0.091 & 0.04 & 0.87 & 3.4 & 0.986 & 5.16\\
+        USDe & - & - & 0.90 & 5.98 & 0.980 & 6.94\\
+        USDC & - & - & 0.001 & 14.16 & 0.595 & <1d\\
+    \bottomrule
+    \end{tabular}
+    \caption{GJR -GARCH model parameters}
+    \label{tab:garch}
+\end{table}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{fig06_conditional_volatility.pdf}
+    \caption{Conditional Volatility}
+    \label{fig:condvol}
+\end{figure}
+
+In plain terms: Bitcoin and Ethereum volatility spikes tend to persist for over a
+week before calming down, well captured by the GJR-GARCH model. USDC, by
+contrast, shows essentially no time-varying volatility at all, which is exactly what
+you would expect from a 1:1 reserve-backed stablecoin.
+
+\subsection{Dynamic Conditional Correlation and Rolling Pearson Correlation}
+DCC Stage 2 estimation produces flat, time-invariant correlation estimates for all
+crypto-stablecoin pairs due to the correlation matrix yielded by system cross-product. The estimated DCC parameters $\hat{a}$ and $\hat{b}$ are
+negligible for these pairs, causing the correlation matrix $Q_t$ to collapse to its
+unconditional anchor $\bar{Q}$ at every observation. As established in Section 5.1.4,
+this outcome is structurally determined by the near-constant near-zero variance of stablecoin
+standardized residuals, which renders the cross-product $z_{BTC,t} \cdot z_{USDe,t}
+\approx 0$ throughout the sample.\\
+
+The 90-day rolling Pearson correlation (Figure~\ref{fig:pearplot}) provides the time-varying co-movement
+estimates for crypto-stablecoin pairs. The BTC-USDe rolling correlation averages
+$\bar{\rho} = 0.333$ over the sample and fluctuates between approximately 0.10 and
+0.50.
+The ETH-USDe rolling correlation averages $\bar{\rho} = 0.278$. By contrast,
+BTC-USDC and ETH-USDC rolling correlations average $-0.044$ and $-0.030$
+respectively, remaining close to zero throughout the sample. The static Pearson correlation matrix (Figure~\ref{fig:pearmat}) confirms these differentials: BTC-USDe $\rho = 0.333$, ETH-USDe $\rho = 0.271$, BTC-USDC $\rho =
+-0.030$, ETH-USDC $\rho = -0.026$. The unconditional positive correlation between
+USDe and crypto assets provides a first descriptive indication
+that the delta-hedging mechanism does not fully neutralize the co-movement between
+USDe and the underlying crypto collateral.\\
+In simple terms: USDe's price moves roughly in line with Bitcoin and Ethereum about
+a third of the time on average. USDC's price shows essentially no relationship with either
+crypto asset throughout the timeline — consistent with being backed by actual dollars rather than
+delta-hedged crypto positions.
+\begin{figure}[ht]
+\centering
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{fig03_correlation_heatmap.pdf}
+    \caption{Rolling 90-day Pearson Correlation Heatmap }
+    \label{fig:pearmat}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{fig07_rolling_correlation.pdf}
+    \caption{Rolling 90-day Pearson Correlation}
+    \label{fig:pearplot}
+\end{minipage}
+\end{figure}
+
+
+\subsection{Granger Causality Results}
+As mentioned earlier in the paper, two Granger Causality tests were performed; one on the log returns and one on the squared returns. This explores which channel, whether price or volatility,  granger-cause or show predictive power from asset X to Y.
+\subsubsection{Granger Causality on Log Returns}
+The $F$-test of the null hypothesis that past
+crypto log returns have no predictive power over future stablecoin log returns fails
+to reject for all four directional pairs at the 5\% level: BTC$\to$USDe
+($F = 2.691$, $p = 0.068$), ETH$\to$USDe ($F = 1.138$, $p = 0.321$),
+BTC$\to$USDC ($F = 1.135$, $p = 0.322$), ETH$\to$USDC ($F = 1.778$, $p = 0.169$).
+The absence of mean Granger causality establishes that crypto price
+movements do not linearly predict stablecoin peg deviations at the daily frequency.
+\subsubsection{Granger Causality on Squared Returns}
+The $F$-test on the null hypothesis that past crypto squared returns have no predictive power over future stablecoin squared returns yields a single significant result: BTC$\to$USDe ($F = 5.444$, $p = 0.0197$).
+All other directional pairs fail to reject the null: ETH$\to$USDe ($F = 1.500$,
+$p = 0.221$), BTC$\to$USDC ($F = 0.207$, $p = 0.649$), ETH$\to$USDC ($F = 0.127$,
+$p = 0.722$). The contrast between the null result on log returns vs squared returns for the BTC$\to$USDe direction provides empirical support for H3: the transmission of crypto risk into USDe peg instability
+operates through the variance channel, not through return-level price dynamics. It is
+noted that the BTC$\to$USDe result at $p = 0.0197$ does not survive a Bonferroni
+correction for twelve simultaneous directional tests (corrected threshold $p < 0.004$);
+however, the finding is corroborated by convergent evidence from the IRF, DY spillover,
+CoVaR, and (non)parametric robustness checks, providing stronger support than a single-test correction.\\
+In simple terms: knowing that Bitcoin's price fell yesterday does not help predict
+whether USDe will deviate from its \$1 peg today. But knowing that Bitcoin's
+volatility was elevated yesterday does help predict elevated USDe peg instability
+today, and only for USDe, not for USDC. This identifies volatility as the channel
+through which crypto stress reaches the synthetic stablecoin peg deviation.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cccc}
+    \toprule
+        Direction & F stat & P-value & Significant\\
+    \midrule
+        BTC - USDe & 5.44 & 0.0197** & Yes\\
+        ETH - USDe & 1.4995 & 0.2208 & No\\
+        BTC - USDC & 0.2072 & 0.6490 & No\\
+        ETH - USDC & 0.127 & 0.7216 & No\\
+    \bottomrule
+    \end{tabular}
+    \caption{Granger Test on squared returns}
+    \label{tab:placeholder}
+\end{table}
+
+\subsection{Impulse Response Functions Results}
+The BTC$\to$USDe IRF shows a statistically significant positive response over days 1
+through 7: the 90\% bootstrap confidence interval excludes zero at each of these
+horizons, with peak response at day 1 (approximately $3.5 \times 10^{-5}$ in $r_t^2$
+units). The response decays monotonically and becomes statistically indistinguishable
+from zero by day 8, consistent with the BTC GJR-GARCH half-life estimate of 8.62
+days and indicating that the variance shock propagated through the delta-hedging
+mechanism dissipates within approximately one week. For the ETH$\to$USDe
+pair, the point estimate is negative at day 1 reflecting the Cholesky decomposition structure 
+and the high BTC-ETH correlation ($\rho = 0.824$). The confidence interval includes zero at all horizons, thus no significant response is detected for
+BTC$\to$USDC or ETH$\to$USDC. These results are consistent with the Granger
+causality findings and formally extend them: not only does past BTC variance
+Granger-cause future USDe variance, but the associated shock produces a positive,
+persistent, and statistically significant response that lasts approximately one week.\\
+
+In simple terms: a one standard deviation shock in Bitcoin's volatility today raises USDe's peg instability
+for approximately the next seven days before the effect wears off. The same is not proven for USDC directly reflecting the structural difference between hedged synthetic exposure and reserve-backed insulation.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig13a_irf_r2_crypto_to_stable.pdf}
+    \caption{Impulse Response Functions}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Diebold-Yilmaz Spillover Index Results}
+The generalized forecast error variance decomposition estimated from the VAR(1) on
+squared returns at forecast horizon $H = 10$ produces a Total Spillover Index of
+17.67\%, indicating that approximately one-fifth of total forecast uncertainty in
+the four-asset system is attributable to cross-asset shocks rather than each asset's
+own dynamics.\\
+BTC shocks account for 2.16\% of USDe's 10-step forecast error variance, compared
+to 0.06\% for USDC representing a 36-fold differential. ETH shocks account for 1.24\% of
+USDe's variance versus 0.46\% for USDC. The NET spillover measure classifies BTC and
+ETH as net transmitters and both USDe and USDC as net receivers, with USDe receiving
+disproportionately more cross-asset variance than USDC. These results are purely
+descriptive and no $p$-value or confidence interval is produced by this method. Their role in the analysis is to quantify the magnitude of the directional transmission identified by the Granger test. The 36-fold differential between USDe and USDC is consistent with the comparative hypothesis H2 and complements the formal CoVaR inference presented in the following section.\\
+In simple terms: when Bitcoin has a volatile day, the forecast uncertainty about
+USDe's future behavior increases by 2.16 percentage-points of forecast
+uncertainty — compared to just 0.06 for USDC. Bitcoin's volatility has
+36 times more influence over USDe's future variance than over USDC's, providing
+a concrete magnitude for the mechanism the other methods detect statistically.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cccccc}
+\toprule
+To/From & BTC &  ETH &  USDe  & USDC &  FROM \\
+\midrule
+BTC & 67.59 & 31.64  & 0.75  & 0.02 & 32.41\\
+ETH & 32.97 & 65.98  & 0.75 &  0.31 & 34.02\\
+USDe & 2.16  & 1.24 & 96.48  & 0.12 &  3.52\\
+USDC &  0.06 &  0.46 &  0.19 & 99.29  & 0.71\\
+TO &  35.19 & 33.34  & 1.69 &  0.45   & NaN\\
+NET &  2.77 & -0.68 & -1.83 & -0.27  &  NaN\\
+Total & 17.67 & 17.67 & 17.67 & 17.67 & 17.67\\
+\bottomrule
+    \end{tabular}
+    \caption{Diebold-Yilmaz Spillover Table}
+    \label{tab:DYspillTab}
+\end{table}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Diebold-Yilmaz spillover.png}
+    \caption{Diebold-Yilmaz Directional Spillover}
+    \label{fig:DYspill}
+\end{figure}
+
+\subsection{CoVaR and Tail Risk Transmission Results}
+For BTC$\to$USDe, the slope coefficient at the distress quantile is
+$\hat{\beta}(q=0.05) = +0.0113$ ($p < 0.001$), indicating that a one-unit increase
+in BTC conditional volatility significantly shifts the left tail of USDe returns
+downward, worsening peg stability specifically during periods of crypto market
+stress. The mean $\Delta$CoVaR for this pair is $-0.000685$, with a 95\% bootstrap
+confidence interval of $[-0.000807,\ -0.000573]$ that excludes zero, confirming the
+statistical stability of the tail risk difference. For ETH$\to$USDe,
+$\hat{\beta}(q=0.05) = +0.0052$ ($p = 0.009$) with mean $\Delta$CoVaR $= -0.000738$
+and CI $[-0.000871,\ -0.000606]$, indicating significant tail risk transmission from
+ETH as well. These results support H1: crypto market distress significantly worsens
+USDe peg stability at the tail.\\
+
+For BTC$\to$USDC, $\hat{\beta}(q=0.05) = -0.000382$ with $p = 0.413$ — statistically
+indistinguishable from zero — indicating that BTC stress has no measurable causal
+effect on USDC's left tail. The mean $\Delta$CoVaR $= -0.000226$ lies within a 95\%
+CI of $[-0.000268,\ -0.000207]$ that excludes zero. However, this CI
+reflects the precise estimation of a structurally narrow distribution around a
+near-zero mean rather than evidence of causal transmission. Therefore, the correct inferential test for USDC is $\hat{\beta}$, not the
+$\Delta$CoVaR CI, and $\hat{\beta}$ is statistically insignificant. ETH$\to$USDC
+shows the same pattern ($\hat{\beta} = -0.000331$, $p = 0.319$). The quantile
+regression scatter plots in the appendix visually confirm these findings: USDe exhibits
+a steeper slope at $q = 0.05$ relative to $q = 0.50$, consistent with tail strengthening, while USDC shows effectively flat slopes at
+both quantiles.\\
+The comparison between the two stablecoins directly addresses H2.
+$|\Delta\text{CoVaR}(\text{USDe})|$ exceeds $|\Delta\text{CoVaR}(\text{USDC})|$
+as shown in Figure~\ref{fig:CoVaR}, by a factor of approximately 3.0 for BTC ($0.000685$ vs $0.000226$) and 3.2 for
+ETH ($0.000738$ vs $0.000229$), confirming that USDe absorbs greater
+tail risk from crypto market stress than USDC under identical conditioning.\\
+In simple terms: when Bitcoin is having one of its worst days, the worst-case
+outcomes for USDe's peg worsen by roughly three times more than USDC's worst-case outcomes under the same conditions. For anyone holding
+USDe as a safe-haven asset, during a crypto crash, when stability matters most, it proves less stable.
+\setlength{\tabcolsep}{4pt}
+\begin{table}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{ccccccccc}
+    \toprule
+        Pair & $\beta(q{=}0.05)$ & P-value & $\beta(q{=}0.50)$ & P-value & Mean $\Delta$CoVaR & CI Exclude 0 & Sig. & $|\text{USDe}| > |\text{USDC}|$ \\
+    \midrule
+        BTC--USDe & 0.011306 & 0.000 & 0.005517 & 0.000 & -0.000685 & TRUE & Yes & TRUE \\
+        BTC--USDC & -0.000382 & 0.413 & 0.000006 & 0.980 & -0.000226 & TRUE & No &  \\
+        ETH--USDe & 0.005193 & 0.009 & 0.003083 & 0.000 & -0.000738 & TRUE & Yes & TRUE \\
+        ETH--USDC & -0.000331 & 0.319 & -0.000019 & 0.904 & -0.000229 & TRUE & No &  \\
+    \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+    \caption{CoVaR Results: Distress vs. Median Quantile Regression}
+    \label{tab:covar_results}
+\end{table}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{fig09_deltacovar_timeseries.pdf}
+    \caption{$\Delta$CoVaR time series}
+    \label{fig:CoVaR}
+\end{figure}
+
+\section{Robustness Checks}
+The following robustness checks are applied to the analysis to ensure the resulting statements of the main pipeline's findings are stable and persist when analyzed in different settings and using different methodologies. The python code for the robustness checks were developed with the use of large language models, specifically \parencite{claude_sonnet_2025}, as well as the exploration of available methods to select a broad and robust robustness checks pipeline. The method selection and review lies within the author criterion. 
+\subsection{Alternative Distress Quantiles}
+As a robustness check, the CoVaR analysis is repeated across multiple distress quantiles to verify that the relative sensitivity of USDe and USDC does not depend on the specific quantile chosen. For each crypto–stablecoin pair, quantile regressions are estimated at \textit{q}=0.01, 0.05, and 0.10, alongside the median benchmark at \textit{q}=0.50. These estimates yield a time-series of $\Delta$CoVaR for each quantile, from which the mean effect and percentile‑bootstrap confidence interval (with 1,000 replications) are computed. Significance is assessed both through the distress‑quantiles slope coefficient  $\beta$ and through whether the bootstrap interval excludes zero. Finally, the absolute $\Delta$CoVaR magnitudes for USDe and USDC are compared to evaluate whether the |$\Delta$CoVaR(USDe)|>|$\Delta$CoVaR(USDC)| holds consistently across all distress thresholds.
+
+\subsection{Alternative Subsample Stability}
+To test the temporal stability of the CoVaR results, the sample is split into two sub‑periods of equal length, and the full CoVaR procedure is re‑estimated separately for each half. For every crypto–stablecoin pair, quantile regressions at \textit{q}=0.05 and \textit{q}=0.50 are fitted within each sub‑sample, producing period‑specific estimates of $\Delta$CoVaR. The mean $\Delta$CoVaR in each period is accompanied by a bootstrap confidence interval based on 1,000 replications, allowing inference on significance and magnitude. Sub‑sample stability is evaluated in two dimensions: whether the distress‑quantile slope coefficient $\beta$ remains significant across periods, and whether the ranking |$\Delta$CoVaR(USDe)| > |$\Delta$CoVaR(USDC)| persists for both BTC and ETH. This procedure verifies that the main findings are not driven by a particular segment of the sample and that the relative vulnerability of USDe is consistent over time.
+
+\subsection{Rolling-Window $\Delta$CoVaR}
+To visually examine the stability and time‑variation of tail‑risk transmission, the CoVaR framework is re‑estimated over a rolling window of 120 trading days (approximately four months). For each window and for each crypto–stablecoin pair, where quantile regressions at \textit{q}=0.05 and \textit{q}=0.50 are fitted, producing a continuous window‑specific $\Delta$CoVaR estimates. This procedure yields a time‑series of $\Delta$CoVaR values that captures how the strength and direction of tail risk transmission evolve across market conditions. The resulting series are plotted separately for BTC and ETH, allowing visual comparison of USDe and USDC at each point in time (see appendix). Periods in which the USDe curve lies below the USDC curve indicate stronger tail‑risk transmission to USDe during crypto distress. This robustness check verifies whether the presence of transmission itself remains consistent across the sample rather than being driven by a particular sub‑period.
+
+\subsection{Empirical Upper Tail Dependence}
+To complement the CoVaR‑based analysis with a nonparametric perspective, the study computes empirical tail‑dependence coefficients between each crypto–stablecoin pair. Tail dependence measures the probability that a stablecoin’s volatility proxy lies in its extreme tail with the condition that the corresponding crypto asset is simultaneously in its own extreme tail. For a given threshold \textit{q}, the upper-tail coefficient $\lambda\_U$ captures joint extreme high‑volatility episodes, while the lower‑tail coefficient $\lambda\_L$ analogously captures joint calm periods. These quantities are computed from empirical ranks, without any distribution or model assumptions. The coefficients are evaluated across multiple thresholds (\textit{Q}=0.80,0.85,0.90,0.95,0.975) to trace the tail‑dependence as the conditioning event becomes more extreme. Particular attention is given to the upper tail coefficient $\lambda\_U$ at \textit{Q}=0.90, where the independence benchmark is 0.10 (10\%). Comparing the upper-tail coefficient for USDe and USDC allows a nonparametric test of H2: whether USDe exhibits systematically stronger upper‑tail co‑movement with BTC or ETH than USDC does. This robustness check verifies whether the relative vulnerability of USDe persists when assessed through a purely joint‑tail behavior rather than model‑based measures.
+
+\subsection{Quantile Gradient Boosting (Nonlinear Transmission Test)}
+To assess whether volatility transmission from BTC and ETH to the stablecoins exhibits nonlinear or quantile‑specific patterns, the analysis employs quantile gradient‑boosting regression. For each stablecoin, a sequence of quantile models is estimated across \textit{q}=0.05 to 0.95 in 5‑percentage‑point increments, using lagged squared BTC and ETH returns as predictors. This machine‑learning approach allows the conditional distribution of stablecoin volatility to vary flexibly across quantiles, capturing potential asymmetries or state‑dependent effects that linear models cannot detect. For every quantile, the relative feature importance of lagged BTC and ETH volatility is extracted, yielding a quantile‑by‑quantile profile of which crypto asset contributes more to the stablecoin’s conditional variance. Comparing these profiles for USDe and USDC reveals whether BTC or ETH driven volatility plays a disproportionately larger role in the upper tail, where stress transmission is most relevant and whether this dominance is stronger for USDe than for USDC. This provides a nonlinear robustness check complementing the CoVaR and tail‑dependence analyses.
+As a refinement, the quantile‑boosting framework is expanded to include the stablecoin’s own lagged squared return as a third predictor. Introducing this autoregressive term breaks the mechanical symmetry between BTC and ETH that arises when only two features are used, allowing the model to cleanly attribute importance to each crypto contribution. This extension yields a more reliable quantile‑specific decomposition of volatility drivers and clarifies whether BTC’s influence on USDe intensifies in the upper tail even after controlling for the stablecoin’s own persistence.
+
+\section{Robustness Checks Results}
+
+\subsection{Alternative Distress Quantile Thresholds}
+The $|\Delta\text{CoVaR}(\text{USDe})| > |\Delta\text{CoVaR}(\text{USDC})|$ holds at all three thresholds for both crypto assets, as reported
+in Table 8 in the appendix. At $q = 0.01$, mean $|\Delta\text{CoVaR}|$ for BTC$\to$USDe is 0.001212 against 0.000400 for BTC$\to$USDC (ratio: 3.0$\times$); for
+ETH$\to$USDe the corresponding values are 0.001244 versus 0.000402 (ratio:
+3.1$\times$). At $q = 0.05$ BTC ratios are 0.000685 versus 0.000226 (3.0$\times$) and ETH ratios are 0.000738 versus
+0.000229 (3.2$\times$). At $q = 0.10$, BTC yields 0.000430 versus 0.000174
+(2.5$\times$) and ETH 0.000447 versus 0.000174 (2.6$\times$). The absolute
+$\Delta$CoVaR magnitudes increase monotonically as the distress quantile
+becomes more extreme while the differential between USDe and USDC remains stable at approximately three times across all thresholds. These results confirm that the comparative tail risk finding is not dependent of the specific distress quantile chosen, and that USDe's excess sensitivity over USDC is a structural feature of the tail rather than a threshold-specific observation.\\
+
+In simple terms: regardless of whether we define a crypto market distress
+day as the worst 10\%, 5\%, or 1\% of days, USDe's peg consistently
+gets worse about three times more than USDC's under the same conditions —
+confirming that the finding is not dependent on where we drew the line.
+
+\subsection{Sub-Sample Stability Results}
+The ranking $|\Delta\text{CoVaR}(\text{USDe})| > |\Delta\text{CoVaR}(\text{USDC})|$
+holds in both sub-periods for both crypto assets as shown in Table 9 in the appendix. In Period~1, BTC$\to$USDe
+yields mean $\Delta\text{CoVaR} = -0.000847$ against $-0.000213$ for
+BTC$\to$USDC (ratio: 4.0$\times$); ETH$\to$USDe is $-0.000940$ against
+$-0.000216$ (ratio: 4.4$\times$). In Period~2, the absolute values
+are smaller for USDe: BTC$\to$USDe yields $-0.000418$ versus $-0.000264$
+for BTC$\to$USDC (ratio: 1.6$\times$); ETH$\to$USDe is $-0.000414$ against
+$-0.000261$ (ratio: 1.6$\times$). The
+compression of the USDe-USDC differential in Period~2 is consistent with
+Ethena's documented backing asset compositional shift toward a greater allocation of backing in liquid stablecoins and real-world assets over this period, which may have
+structurally reduced the protocol's direct crypto volatility exposure. However, the
+result that the ranking holds in both periods still confirms that
+USDe's greater tail risk sensitivity is not a sample-specific artifact limited
+to any single market cycle.\\
+In simple terms: whether we look at the first or second half of the sample,
+USDe consistently absorbs more tail risk from crypto stress than USDC —
+even though the gap narrowed in the more recent period, possibly because
+Ethena reduced its direct crypto exposure in backing assets as the protocol matured.
+
+\subsection{Rolling $\Delta$CoVaR Results}
+The rolling $\Delta$CoVaR for BTC$\to$USDe and ETH$\to$USDe remains negative throughout the sample at levels well below the
+corresponding BTC$\to$USDC and ETH$\to$USDC series as shown in Figures 8 and 9 in the appendix. The shaded region is where
+$|\Delta\text{CoVaR}(\text{USDe})| > |\Delta\text{CoVaR}(\text{USDC})|$ and
+covers the full sample for both crypto assets, with no reversal at any point.
+The BTC$\to$USDC and ETH$\to$USDC rolling $\Delta$CoVaR lines remain close
+to zero throughout, with no drift below $-0.0002$. The
+BTC$\to$USDe and ETH$\to$USDe lines show greater time variation, with the most pronounced USDe sensitivity in the early
+sample period (mid-2024) and a gradual compression through 2025, and toward the end of the sample. This pattern consistent with the
+sub-sample stability findings. The rolling $\Delta{CoVaR}$ confirms that USDe's
+excess tail risk sensitivity relative to USDC is not an event-driven finding but a persistent structural property that holds at
+every point in the sample under the 120-day window.\\
+In simple terms: plotting this relationship day by day over the full sample
+period, USDe never stops being more sensitive to crypto stress than USDC at
+any point showing a consistent, ongoing feature of the synthetic stablecoin
+design rather than a one-time event.
+
+\subsection{Quantile Gradient Boosting Results}
+Two findings emerge from the feature importance profiles in Figures 11 and 12 in the appendix. First, the importance of $r^2_{BTC,t-1}$ rises systematically at upper quantiles,
+reaching its maximum at $q \approx 0.90$, while the importance of $r^2_{ETH,t-1}$
+declines toward zero above $q = 0.85$. This confirms that BTC is the dominant
+external predictor of USDe's variance specifically in high-variance states, while
+ETH's contribution is concentrated in the middle of the distribution. This is
+a finding consistent with the Granger and CoVaR results that identify BTC as the
+primary transmission channel. Second, the importance of $r^2_{USDe,t-1}$ (the
+own autoregressive term) remains consistently low across all quantiles
+(approximately 0.05 to 0.15), indicating that USDe's variance is predominantly
+externally driven by crypto market conditions rather than by its own-variance dynamics, as shown in Figure~\ref{fig:QGB2} in the appendix. This is consistent with the GJR-GARCH finding that USDe's
+$\beta$ and persistence are modest compared to the crypto assets and with the
+Granger result that USDe squared returns do not self-predict, since it was not a significant pair test. The QGB results thus
+corroborate the Granger and CoVaR findings through a different
+computational framework.\\
+In simple terms: a machine learning model, with no prior assumptions
+about which variable matters most for predicting USDe's volatility, consistently
+identifies yesterday's Bitcoin volatility as the dominant driver on the most
+extreme days.
+ 
+\subsection{Empirical Upper Tail Dependence Results}
+For the BTC channel, $\hat{\lambda}_U(\text{BTC, USDe})$ exceeds
+$\hat{\lambda}_U(\text{BTC, USDC})$ at all six thresholds tested, confirming H2
+non-parametrically. At $q = 0.90$, the estimates are 0.175 for BTC-USDe versus
+0.163 for BTC-USDC, both above the independence baseline of 0.10. For the ETH
+channel, the ranking reverses at moderate thresholds: at $q = 0.90$,
+$\hat{\lambda}_U(\text{ETH, USDC}) = 0.225$ exceeds
+$\hat{\lambda}_U(\text{ETH, USDe}) = 0.138$. This reversal is concentrated at
+the 80th and 85th percentile thresholds and is possibly attributable to USDC demand in Ethereum-native DeFi protocols where demand for USDC as an on-chain safe-haven asset generates minimal peg deviations in the positive direction, observable as elevated USDC squared returns. At more extreme thresholds ($q \geq 0.95$), the ranking converges in favor of USDe for the ETH channel as well, with the delta-hedging failure mechanism dominating at the
+most severe stress levels. The BTC tail dependence results are therefore the
+more consistent evidence for H2 across the full range of thresholds, while the
+ETH results are threshold-sensitive.
+Taken together with the CoVaR, Granger, DY, IRF, and QGB results, the
+nonparametric tail dependence analysis provides further convergent evidence
+that the structural difference between synthetic and reserve-backed stablecoin
+designs produces measurably different co-movement behavior in joint extreme
+variance events with crypto assets.\\
+In simple terms: on Bitcoin's most volatile days, USDe is simultaneously
+experiencing unusual peg instability significantly more often than random
+chance would predict and more often than USDC does. This holds at every
+extreme threshold tested.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Discussion %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion}
+The identification of the variance channel as the risk transmission mechanism in H3 has a direct grounded interpretation referring to the delta-hedging design of USDe. Directional BTC price movements do not transmit into USDe peg deviation because the short perpetual futures position is constructed to offset spot price changes, showcasing the hedging efficiency under normal conditions. However, when BTC variance rises, the conditions underlying the hedge deteriorate: perpetual futures funding rates tend to turn negative, market liquidity in the derivatives venues gets thinner, and the cost of maintaining or re-balancing the hedge increases. As noted by Ethena Labs: "If the open market price of USDe diverges sufficiently from the provable asset value backing USDe in an extreme case then the reserve fund may act as a bidder of USDe in the open market" \parencite{ethena_docs}. The variance-regime effects are what the Granger test on squared returns detects. The asymmetry between BTC and ETH in the causal results is consistent with BTC historically representing the dominant component of Ethena's hedging exposure, especially in the first half of the period analyzed.Since ETH and BTC proved to be significantly correlated, BTC variance overshadows ETH's contribution as concluded in the IRF and Upper Tail Dependence results. For portfolio selection, these findings carry an important implication: USDe's conditional tail risk increases precisely in the market states where safe-asset properties are most demanded. An investor holding USDe as a dollar equivalent during a crypto market stress episode, exactly when BTC's volatility could spike, he or she faces USDe peg instability approximately  three times larger than the equivalent USDC exposure under the same conditions. This implies careful consideration on stablecoin selection, based on individual risk profile, investment goals and time horizon. Portfolio allocations that would treat USDe equally to USDC would underestimate USDe's contribution to portfolio tail risk, particularly in strategies that rely on stablecoin holdings as a buffer during crypto draw-downs. From a regulatory perspective, the results provide empirical grounding for a distinction in risk profiles for stablecoins that along a real-time evaluation of USDe backing asset composition, would support further regulation paths and guidance on the purpose and uses of stablecoins, based on their peg stability mechanism designs as these innovations continue to grow..
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Conclusion %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+This paper examines whether crypto asset volatility transmits into the peg stability of Ethena's delta-neutral synthetic stablecoin USDe, and whether this transmission differs measurably from that observed for fiat-backed USDC. The empirical evidence, drawn from a sequential pipeline of GJR-GARCH volatility modeling, VAR-based Granger causality on squared returns, Impulse Response Functions, Diebold-Yilmaz spillover decomposition, and CoVaR quantile regression, supports three principal conclusions. First, BTC variance significantly Granger-causes USDe variance ($p=0.0197$), with the associated impulse response significant over days 1 through 7 and a CoVaR distress quantile highly significant ($\hat{\beta} = 0.011, p<0.001$), confirming H1. No equivalent transmission is detected for USDC across any method. Second, the sensitivity comparison between the two stablecoins is robust with USDe proving to absorb approximately three times more tail risk than USDC under both BTC and ETH stress in the CoVaR framework, and BTC shocks accounting for 36 times more of USDe's forecast error variance than USDC's in the Diebold-Yilmaz decomposition. This result holds across alternative distress quantiles, sub-periods, and nonparametric tail dependence estimates, confirming H2. Third, failure to reject the Granger null on log returns, combined with its rejection on squared returns identifies the variance channel as the operative transmission mechanism confirming H3. The convergence of five independent methodologies on the same qualitative conclusion strengthens the credibility of these findings beyond any single test, addressing the Bonferroni limitation mentioned in the following section. Taken together, the results demonstrate that stablecoin peg architecture has measurable and quantifiable consequences for tail risk dynamics. These consequences are present precisely in the market conditions where stable-value properties are most demanded.
+\begin{table}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{cccccc}
+    \toprule
+        Hypothesis & Method & BTC $\rightarrow$ USDe & ETH $\rightarrow$ USDe & BTC $\rightarrow$ USDC & ETH $\rightarrow$ USDC \\
+    \midrule
+        H1 & Granger, IRF & Significant & Not sig. & Not sig. & Not sig. \\
+        H2 & $\Delta$CoVaR & Significant & Significant & Not sig. & Not sig. \\
+        H3 & Granger & Significant & None & None & None \\
+    \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+    \caption{Summary of Hypothesis Testing Across Methods}
+    \label{tab:hypothesis_summary}
+\end{table}
+
+
+\section{Limitations}
+As limitations of the study, the short sample period must be mentioned, which is due to the relative short life until today of USDe as well as having only one more fiat-backed stablecoin (USDC) as comparison variable.
+However, only USDC was selected as the fiat-backed benchmark due to its fully audited reserve structure and absence of historical reserve controversies, providing a cleaner identification of the fiat-backing mechanism, in contrast to USDT which was excluded due to data availability constraints and reserve transparency concerns. However, the analysis could profit from additional stablecoin and crypto-asset integration that would add valuable information for a broader crypto and stablecoin analysis.\\
+Due to availability, this study employs daily data rather than high frequency intraday data as recommended by \parencite{Chen03032026} thus, missing intraday behavior and stress transmission information.\\
+DCC-GARCH was unable to yield an identifiable output for the crypto-stablecoin pairs due to stablecoins near-constant (zero) variance. Also, the VAR companion matrix stability check was not formally conducted. Although the stationarity of all inputs proves stability, formal verification remains pending. 
+Granger causality provides a measure of predictability but not structural causation. The Bonferroni correction for twelve simultaneous Granger directional tests reduces the statistical significance threshold to $p<0.004$. The BTC$\rightarrow$USDe result at $p=0.0197$ does not meet this corrected threshold, thus providing a conclusion which relies on convergent multi-method evidence rather than a single test. And lastly, the sample coincides almost entirely with a positive futures funding rate environment for USDe, which is structurally favorable for the delta-hedging mechanism. Findings may not generalize to long negative funding rate regimes, which would represent the protocol's most severe stress scenarios. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% References %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Appendix}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{fig10_quantile_scatter.pdf}
+    \caption{CoVaR quantile scatter plot}
+    \label{fig:covarscatter}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Rolling delta COVAR BTC stress.png}
+    \caption{Robustness Rolling $\Delta$CoVaR BTC }
+    \label{fig:BTCrollingCoVaR}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Rolling delta COVAR ETH stress.png}
+    \caption{Robustness Rolling $\Delta$CoVaR ETH}
+    \label{fig:ETHrollingCoVaR}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{ccccc}
+    \toprule
+        Quantile & Crypto & USDe & USDC & Holds \\
+    \midrule
+        0.01 & BTC & 0.001212 & 0.000400 & TRUE \\
+        0.01 & ETH & 0.001244 & 0.000402 & TRUE \\
+        0.05 & BTC & 0.000685 & 0.000226 & TRUE \\
+        0.05 & ETH & 0.000738 & 0.000229 & TRUE \\
+        0.10 & BTC & 0.000430 & 0.000174 & TRUE \\
+        0.10 & ETH & 0.000447 & 0.000174 & TRUE \\
+    \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+    \caption{Robustness Quantile Comparison of USDe vs USDC}
+    \label{tab:quantile_comparison}
+\end{table}
+\begin{table}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{cccc}
+    \toprule
+        Pair & Period 1 & Period 2 & Holds \\
+    \midrule
+        BTC--USDC & -0.000213 & -0.000264 & TRUE \\
+        BTC--USDe & -0.000847 & -0.000418 & TRUE \\
+        ETH--USDC & -0.000216 & -0.000261 & TRUE \\
+        ETH--USDe & -0.000940 & -0.000414 & TRUE \\
+    \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+    \caption{Robustness Subsample Comparison Across Periods}
+    \label{tab:period_comparison}
+\end{table}
+Period 1 (2024-02-21 – 2025-03-27) N=400\\
+Period 2 (2025-03-27 – 2026-05-01) N=401
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{figA1_tail_dependence.pdf}
+    \caption{Robustness Upper Tail Dependence }
+    \label{fig:placeholder}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{figA2_quantile_rf_importance.pdf}
+    \caption{Robustness QGB Crypto}
+    \label{fig:QGB1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{figA2_corrected_qgb_importance.pdf}
+    \caption{Robustness QGB Corrected stablecoin included}
+    \label{fig:QGB2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{image.png}
+    \caption{Engle-NG Sign Bias Test}
+    \label{fig:Engle}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{GARCH selection.png}
+    \caption{GARCH model selection BIC and AIC}
+    \label{fig:placeholder}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Literaturverzeichnis %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\printbibliography
+\setcounter{page}{1}
+\pagenumbering{roman}
+\onehalfspacing
+\addcontentsline{toc}{section}{References}
+%\bibliography{mybib}
+%\bibliographystyle{agsm}
+
+%%%%%%%%%%%%%%%%%%
+%%% Plagiatserklärung %%%
+%%%%%%%%%%%%%%%%%%
+\newpage
+\section*{Declaration of Independent Authorship (February 2025)}
+ I attest with my signature that I have completed this paper independently and without any assistance from third parties and that the information concerning the sources used in this paper is true and complete in every respect. All sources that have been quoted or paraphrased have been referenced accordingly. \\
+Additionally, I affirm that any text passages written with the help of AI-supported technology are marked as such, including a reference to the AI-supported program used.\\ 
+This paper may be checked for plagiarism and use of AI-supported technology using appropriate software. I understand that unethical conduct may lead to a grade of 1 or “fail” or to expulsion from the course of studies. 
+I have taken note of the fact that in the event of a justified suspicion of the unauthorized or undisclosed use of AI in written performance assessments, I am upon request obligated to cooperate in confirming or ruling out the suspicion, for example by attending an interview. \\
+
+\textbf{Declaration of use of AI-tools}
+In the preparation of this seminar paper, I mainly made use of Claude (Anthropic) \parencite{claude_sonnet_2025}, an AI language model, as an analytical and writing support tool, as well as minor use of Microsoft Copilot \parencite{microsoftcopilot2026}. The use of these tools was limited to assistance in execution and did not substitute for the independent intellectual contributions of the author, which include the research design, the design of the research question, the formulation of the three hypotheses, the selection of the methodological framework, the interpretation of empirical findings and arguments, and all academic judgments regarding the significance and implications of results. I reviewed and edited all AI-generated suggestions before incorporating them into th final paper.\\
+The specific tasks for which \textbf{Claude} was used as a tool are listed below:
+\textbf{Programming and computational assistance.} Claude assisted in \textbf{writing Python code} for the following analytical procedures and the corresponding plots: data fetching and log return computation; pre-estimation diagnostics (ADF, PP, KPSS stationarity tests; Jarque-Bera normality test; Ljung-Box Q-test; Engle ARCH-LM test; Engle-NG sign bias test); GJR-GARCH(1,1)-t estimation and model selection via AIC and BIC; DCC-GARCH two-stage estimation; 90-day rolling Pearson correlation; Granger causality F-tests on log returns and squared returns; Impulse Response Functions with percentile bootstrap confidence intervals; Diebold-Yilmaz generalized forecast error variance decomposition; CoVaR estimation via quantile regression with bootstrap confidence intervals; and five robustness checks including alternative distress quantiles, sub-sample stability, rolling CoVaR, empirical upper tail dependence, and Quantile Gradient Boosting.
+\textbf{Conceptual understanding and study support}. Claude was used as a complementary educational support tool to explain and deepen the author's understanding of the statistical methods applied, including the intuition behind GJR-GARCH and DCC-GARCH, the Granger causality framework and VAR system, IRF identification via Cholesky decomposition, the Diebold-Yilmaz framework, the CoVaR and CoVaR methodology, and nonparametric approaches.
+\textbf{Academic writing assistance.} Claude provided \textbf{proof reading and drafting assistance}. Claude was used to suggest reformulations of sentences and paragraphs to improve the clarity and grammar of the text. All AI-generated suggestions and content was reviewed, edited, and approved by the author. The author bears full responsibility for all claims, interpretations, and conclusions contained in the paper.
+\textbf{Presentation support.} Claude provided feedback on the structure, content, and quality of the seminar presentation, including identifying errors, slide ordering issues, and preparing likely audience questions.\\
+The tasks for which \textbf{Microsoft Copilot} was used were mainly quick conceptual explanations, code checking and error fixing, as well as corroborating the functionality and quality of code provided by Claude; as well as LaTeX syntax coding assistance for table and figure formatting and error fixing. \\
+All uses of AI-tools described above are fully disclosed in accordance with the University of Basel's guidelines on the use of AI-assisted tools in academic work (version 3.0 August 2025: https://www.unibas.ch/dam/jcr:4ef38090-9240-4398-9663-2373f264c181/Leitfaden-KI-zitieren.2025-10-08-12-00-37.pdf).
+
+%% YOUR NAME HERE %%
+Juan Pablo Hoyo Vazquez \\
+Basel, 16.06.2026 \\
+\textit{Juan Pablo Hoyo Vazquez}
+\hrule width 5cm \relax
+%%%%%%%%%%%%%%%%%%%%
+
+%\section{Appendix}
+\end{document}

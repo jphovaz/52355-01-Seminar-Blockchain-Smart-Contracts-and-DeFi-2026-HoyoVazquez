@@ -1,0 +1,5 @@
+asset,n,mean,mean_pval,mean_nonzero,has_autocorr,needs_arma,arma_order,arma_aic,resid_lb_min_p,resid_clean
+logret_BTC,801,0.000502,0.5799,False,True,True,"(3, 2)",-3596.39,0.5292,True
+logret_ETH,801,-0.00034,0.7957,False,False,False,"(0, 0)",—,—,True
+logret_USDe,801,-3e-06,0.8407,False,True,True,"(2, 3)",-10152.21,0.7075,True
+logret_USDC,801,-0.0,0.9826,False,True,True,"(1, 2)",-12247.49,0.8681,True
