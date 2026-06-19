@@ -1,8 +1,8 @@
 # Seminar 52355-01 — Blockchain, Smart Contracts and Decentralized Finance (FS 2026)
 **Author:** Juan Pablo Hoyo Vazquez  
-**University of Basel Facilty of Business and Economics**
+**University of Basel Faculty of Business and Economics**
 
-This repository contains the full submission for the seminar, including the final paper, presentation, code, data, and reproducible outputs.
+This repo contains the submission for the seminar, including the final paper, presentation, code, data and outputs.
 
 ---
 
